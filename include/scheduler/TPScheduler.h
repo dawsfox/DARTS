@@ -57,6 +57,7 @@ namespace darts
     protected:
         dartsPool<tpClosure*> ready_;
         dartsPool<Codelet*> codelets_;
+        std::vector<SoftFifo> fifos_; //can easily be changed to a different type
 
     public:
         
