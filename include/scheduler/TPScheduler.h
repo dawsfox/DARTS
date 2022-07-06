@@ -32,6 +32,7 @@
 #include "ThreadedProcedure.h"
 #include <vector>
 #include <stdlib.h>
+#include "Fifo.h"
 #include "dartsPool.h"
 
 #ifdef TRACE
@@ -57,7 +58,14 @@ namespace darts
     protected:
         dartsPool<tpClosure*> ready_;
         dartsPool<Codelet*> codelets_;
-        std::vector<SoftFifo> fifos_; //can easily be changed to a different type
+        //std::vector<darts::hwloc::SoftFifo<int>> fifos_; //can easily be changed to a different type
+	std::vector<darts::hwloc::FifoMeta> fifoTable;
+	//it works how it is with darts::hwloc::SoftFifo<int> but this is a problem
+	//TODO: find a way for scheduler to keep track of FIFOs of any type...
+	//don't want to restrict all FIFOs to same type
+	// ideas: linked list? kind of slow but would be functional
+	// just a struct that stores the FIFO meta data? Where will the Fifos 
+	// actually be then...
 
     public:
         
