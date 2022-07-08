@@ -41,24 +41,35 @@
 namespace darts
 {
     
-    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat):
+    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag):
     status_(stat),
     sync_(dep,res),
     myTP_(theTp) 
     {
+	    if (producerFlag) { producer_ = (Fifo *) 1; }
+	    else { producer_ = (Fifo *) NULL; }
+	    if (consumerFlag) { consumer_ = (Fifo *) 1; }
+	    else { consumer_ = (Fifo *) NULL; }
     }
 
     Codelet::Codelet(void):
     status_(NIL),
     sync_(0U,0U),
-    myTP_(0) { }
+    myTP_(0),
+    producer_(NULL),
+    consumer_(NULL)	{ }
 
     void
-    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat)
+    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag)
     {
         sync_.initSyncSlot(dep,res);
         status_ = stat ;
         myTP_ = theTp;
+	if (producerFlag) { producer_ = (Fifo *) 1; }
+	else { producer_ = (Fifo *) NULL; }
+	if (consumerFlag) { consumer_ = (Fifo *) 1; }
+	else { consumer_ = (Fifo *) NULL; }
+
     }
 
     void

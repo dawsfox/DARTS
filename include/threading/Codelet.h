@@ -67,6 +67,9 @@ namespace darts
 				*/
         ThreadedProcedure * myTP_;
 
+        darts::hwloc::Fifo *producer_; //assigned by TP scheduler when dependencies fulfilled
+        darts::hwloc::Fifo *consumer_;
+
     public:
         /**
 				 * Constructor: Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat);
@@ -76,8 +79,10 @@ namespace darts
 				 *	res - The value of the dependence counter if the codelet has to be reset
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
+				 *	producerFlag - Flag indicating Codelet will receive streamed input from FIFO
+				 *	cnosumerFlag - Flag indicating Codelet will stream output to FIFO
          */
-        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT);
+        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT, bool producerFlag=false, bool consumerFlag=false);
         Codelet(void);
 
         //Destructors
@@ -94,7 +99,7 @@ namespace darts
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
          */
-        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat);
+        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag=false, bool consumerFlag=false);
 
 				/**
 				 * Method: decDep
