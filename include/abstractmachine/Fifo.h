@@ -9,6 +9,10 @@
 namespace darts {
 namespace hwloc {
 	
+//FifoMeta class doesn't deal with actual data elements so
+//it doesn't need to be a template. This makes it easier
+//for the SU to have Fifos of different types in the same
+//structure for overall bookkeeping
     class FifoMeta {
     public:
         uint64_t _cluster,
@@ -16,8 +20,8 @@ namespace hwloc {
 		 _id,
 		 _size,
 		 _typeSize;
-	Unit * _producer,
-	     * _consumer;
+	Codelet * _producer,
+	        * _consumer;
 	FifoMeta() {}
 	FifoMeta(const uint64_t cluster,
 		 const uint64_t localMem,
@@ -35,8 +39,8 @@ namespace hwloc {
 		 const uint64_t id,
 		 const uint64_t size,
 		 const uint64_t typeSize,
-		 Unit *producer,
-		 Unit *consumer)
+		 Codelet *producer,
+		 Codelet *consumer)
 		: _cluster(cluster),
 	          _localMem(localMem),	
 		  _id(id),
@@ -50,8 +54,8 @@ namespace hwloc {
 	uint64_t getId() const { return _id; }
 	uint64_t getSize() const { return _size; }
 	uint64_t getTypeSize() const { return _typeSize; }
-	Unit * getProducer() const { return _producer; }
-	Unit * getConsumer() const { return _consumer; }
+	Codelet * getProducer() const { return _producer; }
+	Codelet * getConsumer() const { return _consumer; }
     };
 	
 
@@ -85,8 +89,8 @@ namespace hwloc {
              const uint64_t id,
              uint64_t size,
 	     uint64_t typeSize,
-             Unit *producer,
-             Unit *consumer) 
+             Codelet *producer,
+             Codelet *consumer) 
 		/*
         : _cluster(cluster),
           _localMem(localMem),
@@ -110,8 +114,8 @@ namespace hwloc {
 	uint64_t getTypeSize() const { return _meta.getTypeSize(); }
         //uint64_t getNumConsumers() const { return _meta.; }
 	//num consumers can be added later
-        Unit * getProducer()   const { return _meta.getProducer(); }
-        Unit * getConsumer()   const { return _meta.getConsumer(); } //will have to be extended if multiple consumers allowed
+        Codelet * getProducer()   const { return _meta.getProducer(); }
+        Codelet * getConsumer()   const { return _meta.getConsumer(); } //will have to be extended if multiple consumers allowed
 
         //template <typename T> uint64_t push(T toPush) {
         //}
@@ -120,6 +124,8 @@ namespace hwloc {
         
     };
 
+    //should just replace this with MsgQ asap
+    //also this queue could be lockless with an empty element
     template <typename T>
     class SoftFifo: protected Fifo {
         private:
@@ -143,8 +149,8 @@ namespace hwloc {
              const uint64_t localMem,
              const uint64_t id,
              const uint64_t size,
-             Unit *producer,
-             Unit *consumer)
+             Codelet *producer,
+             Codelet *consumer)
             : Fifo(cluster, localMem, id, size, sizeof(T), producer, consumer)
              {
                 _head = 0;
