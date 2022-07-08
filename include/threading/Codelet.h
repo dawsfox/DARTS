@@ -68,7 +68,9 @@ namespace darts
         ThreadedProcedure * myTP_;
 
         darts::hwloc::Fifo *producer_; //assigned by TP scheduler when dependencies fulfilled
+	int producerId_;
         darts::hwloc::Fifo *consumer_;
+	int consumerId_;
 
     public:
         /**
@@ -80,9 +82,11 @@ namespace darts
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
 				 *	producerFlag - Flag indicating Codelet will receive streamed input from FIFO
-				 *	cnosumerFlag - Flag indicating Codelet will stream output to FIFO
+				 *	consumerFlag - Flag indicating Codelet will stream output to FIFO
+				 *	producerId - Id to match streamed input from specific source Codelet
+				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
-        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT, bool producerFlag=false, bool consumerFlag=false);
+        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT, bool producerFlag=false, bool consumerFlag=false, int producerId=0, int consumerId=0);
         Codelet(void);
 
         //Destructors
@@ -98,8 +102,12 @@ namespace darts
 				 *	res - The value of the dependence counter if the codelet has to be reset
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
+				 *	producerFlag - Flag indicating Codelet will receive streamed input from FIFO
+				 *	consumerFlag - Flag indicating Codelet will stream output to FIFO
+				 *	producerId - Id to match streamed input from specific source Codelet
+				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
-        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag=false, bool consumerFlag=false);
+        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag=false, bool consumerFlag=false, int producerId=0, int consumerId=0);
 
 				/**
 				 * Method: decDep

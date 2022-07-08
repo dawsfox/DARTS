@@ -70,6 +70,12 @@ namespace darts {
             }
             //Lets do the work!
             Codelet * tempCodelet = popCodelet();
+	    //check if Codelet expects streamed input/output
+	    //allocate Fifo (later can possibly reuse allocated Fifos depending on settings?)
+	    //update Fifo book keeping
+	    //set Codelet's pointer(s)
+	    //need a second variable to indicate which codelet is connected to this one.
+	    //could go with unique Fifo IDs
             while (tempCodelet) {
                 MScheduler * myCDS = static_cast<MScheduler*> (getSubScheduler(getSubIndexInc()));
                 while (!myCDS->pushCodelet(tempCodelet)) {

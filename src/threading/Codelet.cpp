@@ -41,7 +41,7 @@
 namespace darts
 {
     
-    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag):
+    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag, int producerId, int consumerId):
     status_(stat),
     sync_(dep,res),
     myTP_(theTp) 
@@ -57,10 +57,16 @@ namespace darts
     sync_(0U,0U),
     myTP_(0),
     producer_(NULL),
-    consumer_(NULL)	{ }
+    consumer_(NULL),
+    producerId_(producerId),
+    consumerId_(consumerId)	{ }
+
+    //if Codelet A has consumer ID 2 and is intended to stream to Codelet B, Codelet B needs producer ID 2
+    //Likewise the other way around. ID matching is like an ID for the Fifo allocation and gives the SU
+    //a way to match the Codelets together for scheduling
 
     void
-    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag)
+    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag, int producerId, int consumerId)
     {
         sync_.initSyncSlot(dep,res);
         status_ = stat ;
@@ -69,6 +75,8 @@ namespace darts
 	else { producer_ = (Fifo *) NULL; }
 	if (consumerFlag) { consumer_ = (Fifo *) 1; }
 	else { consumer_ = (Fifo *) NULL; }
+	producerId_ = producerId;
+	consumerId_ = consumerId;
 
     }
 
