@@ -2,9 +2,9 @@
 #ifndef DARTS_HWLOC_FIFO_H
 #define DARTS_HWLOC_FIFO_H
 
-#include "Unit.h"
 #include <vector>
 #include "Lock.h"
+#include "Codelet.h"
 
 namespace darts {
 namespace hwloc {
@@ -64,15 +64,6 @@ namespace hwloc {
      */
     class Fifo {
     protected: //was private -- should this still be private?
-	    /*
-        uint64_t _cluster, 
-                 _localMem,
-                 _id,
-                 _size, //size in number of elements
-                 _numConsumers; //may or may not be removed later
-        Unit * _producer, //should be Unit or codelet? Unit would allow it to persist which may be better
-             * _consumer;
-	    */
         FifoMeta _meta;
     public:
         Fifo() {}

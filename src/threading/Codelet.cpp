@@ -41,42 +41,24 @@
 namespace darts
 {
     
-    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag, int producerId, int consumerId):
+    Codelet::Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat):
     status_(stat),
     sync_(dep,res),
     myTP_(theTp) 
-    {
-	    if (producerFlag) { producer_ = (Fifo *) 1; }
-	    else { producer_ = (Fifo *) NULL; }
-	    if (consumerFlag) { consumer_ = (Fifo *) 1; }
-	    else { consumer_ = (Fifo *) NULL; }
-    }
+    { }
 
     Codelet::Codelet(void):
     status_(NIL),
     sync_(0U,0U),
-    myTP_(0),
-    producer_(NULL),
-    consumer_(NULL),
-    producerId_(producerId),
-    consumerId_(consumerId)	{ }
+    myTP_(0) { }
 
-    //if Codelet A has consumer ID 2 and is intended to stream to Codelet B, Codelet B needs producer ID 2
-    //Likewise the other way around. ID matching is like an ID for the Fifo allocation and gives the SU
-    //a way to match the Codelets together for scheduling
 
     void
-    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag, bool consumerFlag, int producerId, int consumerId)
+    Codelet::initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat)
     {
         sync_.initSyncSlot(dep,res);
         status_ = stat ;
         myTP_ = theTp;
-	if (producerFlag) { producer_ = (Fifo *) 1; }
-	else { producer_ = (Fifo *) NULL; }
-	if (consumerFlag) { consumer_ = (Fifo *) 1; }
-	else { consumer_ = (Fifo *) NULL; }
-	producerId_ = producerId;
-	consumerId_ = consumerId;
 
     }
 
@@ -175,5 +157,24 @@ namespace darts
         return (void*) f;
     }
     #endif
+
+    StreamingCodelet::StreamingCodelet() :
+	    Codelet() { };
+
+    StreamingCodelet::StreamingCodelet(Codelet *consumerCod) :
+	    Codelet(),
+	    consumerCod_(consumerCod)
+	    { };
+
+    StreamingCodelet::StreamingCodelet(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * theTp, uint32_t stat) :
+	    Codelet(dep, res, theTp, stat),
+	    consumerCod_(consumerCod)
+	    { };
     
+    Fifo * StreamingCodelet::getConsumer() { return(consumer_); }
+    Fifo * StreamingCodelet::getProducer() { return(producer_); }
+    void StreamingCodelet::setProducer(Fifo * producer) { producer_ = producer; }
+    void StreamingCodelet::setConsumer(Fifo * consumer) { consumer_ = consumer; }
+    void StreamingCodelet::setConsumerCod(Codelet * consumerCod) { consumerCod_ = consumerCod; }
+    void StreamingCodelet::decDepConsumerCod() { consumerCod_->decDep(); }
 } // namespace darts

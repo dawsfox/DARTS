@@ -58,14 +58,8 @@ namespace darts
     protected:
         dartsPool<tpClosure*> ready_;
         dartsPool<Codelet*> codelets_;
-        //std::vector<darts::hwloc::SoftFifo<int>> fifos_; //can easily be changed to a different type
-	std::vector<darts::hwloc::FifoMeta> fifoTable;
-	//it works how it is with darts::hwloc::SoftFifo<int> but this is a problem
-	//TODO: find a way for scheduler to keep track of FIFOs of any type...
-	//don't want to restrict all FIFOs to same type
-	// ideas: linked list? kind of slow but would be functional
-	// just a struct that stores the FIFO meta data? Where will the Fifos 
-	// actually be then...
+	//TODO: Change from FifoMeta to whole Fifo?
+	std::vector<darts::hwloc::FifoMeta*> fifoTable;
 
     public:
         
@@ -166,6 +160,9 @@ namespace darts
         }
         
         static TPScheduler * create(unsigned int type);
+
+	virtual Fifo *
+	allocateFifo(Codelet * producerCod) = 0;
     };
 }
 

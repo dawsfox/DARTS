@@ -36,6 +36,8 @@ namespace darts
 
     //This is a forward declaration since there is a circular dependence
     class ThreadedProcedure;    
+    //this is also a forward declaration
+    class Fifo;
     /*
 		 * Class: Codelet
 		 * The codelet class is a virutal class. Use this class to instantiate codelets
@@ -67,10 +69,6 @@ namespace darts
 				*/
         ThreadedProcedure * myTP_;
 
-        darts::hwloc::Fifo *producer_; //assigned by TP scheduler when dependencies fulfilled
-	int producerId_;
-        darts::hwloc::Fifo *consumer_;
-	int consumerId_;
 
     public:
         /**
@@ -86,7 +84,7 @@ namespace darts
 				 *	producerId - Id to match streamed input from specific source Codelet
 				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
-        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT, bool producerFlag=false, bool consumerFlag=false, int producerId=0, int consumerId=0);
+        Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT);
         Codelet(void);
 
         //Destructors
@@ -107,7 +105,14 @@ namespace darts
 				 *	producerId - Id to match streamed input from specific source Codelet
 				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
-        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat, bool producerFlag=false, bool consumerFlag=false, int producerId=0, int consumerId=0);
+        void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat);
+
+
+				/**
+				 * Method: isStreaming
+         * Returns bool indicating if codelet has normal or streaming behavior
+         */
+	virtual bool isStreaming() { return false; }
 
 				/**
 				 * Method: decDep
@@ -186,4 +191,26 @@ namespace darts
         void * returnFunct(void);
         #endif
     };    
+
+    class StreamingCodelet : public Codelet {
+    protected:
+        Fifo *producer_; //assigned by TP scheduler when dependencies fulfilled
+        Fifo *consumer_; //same here. These can both be active
+	Codelet * consumerCod_; //pipelining chain goes downwards so only contains consumer Codelet pointer
+	//think of it like a linked list of streaming codelets managed by the SU
+	virtual bool isStreaming() { return true; }
+    public:
+        StreamingCodelet();
+        StreamingCodelet(Codelet *consumerCod);
+        StreamingCodelet(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT);
+	//darts::hwloc::Fifo * getProducer();
+	//darts::hwloc::Fifo * getConsumer();
+	Fifo * getConsumer();
+	Fifo * getProducer();
+	void setProducer(Fifo *producer);
+	void setConsumer(Fifo *consumer);
+	void setConsumerCod(Codelet *consumerCod);
+	void decDepConsumerCod();
+	
+    };
 } // namespace darts

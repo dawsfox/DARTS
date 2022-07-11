@@ -39,6 +39,19 @@
 
 namespace darts {
 
+    virtual Fifo *
+    TPRoundRobin::allocateFifo(Codelet * producerCod) {
+	// decDep consumer here?
+        // TODO
+	// Make scheduling decision here -- not now but in the future
+	// for example, decDep consumer and see if it is ready; if its not yet
+	// then store farther away. If it is, use HW Fifo when available 
+	// new Fifo
+	// set producer/consumer values on Fifo
+	// add metadata to Fifo table
+	// set Fifo address on StreamingCodelet(s)
+    }
+
     void
     TPRoundRobin::policy() {
         useconds_t usecs = 1,
