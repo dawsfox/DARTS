@@ -30,6 +30,7 @@
 #include "TPSchedPolicy.h"
 #include "TPScheduler.h"
 #include "Codelet.h"
+#include "StreamingCodelet.h"
 #include "MicroScheduler.h"
 #include <cstdlib>
 #include "tpClosure.h"
@@ -39,17 +40,32 @@
 
 namespace darts {
 
-    virtual Fifo *
+    // should only be called after checking if Codelet being popped/pushed
+    // (producerCod) is a StreamingCodelet
+    Fifo *
     TPRoundRobin::allocateFifo(Codelet * producerCod) {
 	// decDep consumer here?
         // TODO
 	// Make scheduling decision here -- not now but in the future
 	// for example, decDep consumer and see if it is ready; if its not yet
 	// then store farther away. If it is, use HW Fifo when available 
+	producerCod->decDepConsumerCod();
+	//producerCod->decDepCons();
 	// new Fifo
+	// to be safe, we may also want to check if the consumerCod is NULL but this should really be checked
+	// before this function is even called to make sure it's not the end of a streaming pipeline
+	Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
 	// set producer/consumer values on Fifo
-	// add metadata to Fifo table
+	producerCod->setConsumer(streamFifo);
+	// here we're not setting producer because this Codelet does not have a Fifo
+	// producing for it -- or if it does then it is already assigned 
+	// add Fifo to SU-managed table
+	//fifoTable.push_back(streamFifo);
+	fifos_.push(streamFifo);
 	// set Fifo address on StreamingCodelet(s)
+	
+
+	return(streamFifo);
     }
 
     void

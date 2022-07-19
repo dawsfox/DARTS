@@ -119,7 +119,7 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 ## Compiler flags
 if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -std=c++11 -Wall -Wextra -Werror -Wno-pmf-conversions" )
+    set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -std=c++11 -Wall -Wextra -Werror -Wno-pmf-conversions -Wno-unused-parameter" )
     set( CMAKE_C_FLAGS ${CMAKE_C_FLAGS}     "-g -std=c11 -Wall -Wextra -Werror" )
 elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
     set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -std=c++11 -Wall -Wextra -Werror " )

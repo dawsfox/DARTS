@@ -69,6 +69,10 @@ namespace darts
         {
             whichSub_ = index;
         }
+
+	//virtual Fifo *
+	Fifo *
+	allocateFifo(Codelet * producerCod);
     };
     
     class TPPushFull : public TPScheduler
@@ -104,6 +108,11 @@ namespace darts
         {
             whichSub_ = index;
         }
+	
+	/*
+	virtual Fifo *
+	allocateFifo(Codelet * producerCod) { return NULL; }
+	*/
     };
    
     class TPStatic : public TPScheduler
@@ -113,12 +122,22 @@ namespace darts
         
         bool
         pushCodelet(Codelet * CodeletToPush);
+
+	/*
+	virtual Fifo *
+	allocateFifo(Codelet * producerCod) { }
+	*/
     };
     
     class TPDynamic : public TPScheduler
     {    
     public:
         void policy(void);
+
+	/*
+	virtual Fifo *
+	allocateFifo(Codelet * producerCod) { return NULL; }
+	*/
     };
     
     class TPWorkPush : public TPScheduler
@@ -164,6 +183,11 @@ namespace darts
             }
             return ready_.push(TPtoPush);
         }
+
+	/*
+	virtual Fifo *
+	allocateFifo(Codelet * producerCod) { return NULL; }
+	*/
                 
     };    
 }

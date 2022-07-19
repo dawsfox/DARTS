@@ -7,7 +7,7 @@
 #include "Codelet.h"
 
 namespace darts {
-namespace hwloc {
+//namespace hwloc {
 	
 //FifoMeta class doesn't deal with actual data elements so
 //it doesn't need to be a template. This makes it easier
@@ -103,6 +103,7 @@ namespace hwloc {
 
         uint64_t getSize()     const { return _meta.getSize();     }
 	uint64_t getTypeSize() const { return _meta.getTypeSize(); }
+	FifoMeta * getFifoMeta() const { return (FifoMeta *) &(_meta); }
         //uint64_t getNumConsumers() const { return _meta.; }
 	//num consumers can be added later
         Codelet * getProducer()   const { return _meta.getProducer(); }
@@ -124,9 +125,7 @@ namespace hwloc {
                      _tail;
             bool _full;
             bool _empty;
-            //char* _queue;
-	    // void* _queue2;
-	    std::vector<T> _queue; //how to have it typeless? void pointer? this points to vector
+	    std::vector<T> * _queue;
             Lock _lock;
         public:
             SoftFifo()
@@ -148,9 +147,7 @@ namespace hwloc {
                 _tail = 0;
                 _full = false;
                 _empty = true;
-		_queue = new std::vector<T>();
-                //_queue = new char[_size]; //should I use templates for the queue? So that typing can be dynamic
-                //also should I use auto and std::vector? maybe get rid of this ...
+		_queue = new std::vector<T>(size);
              }
             
             ~SoftFifo() {
@@ -181,10 +178,24 @@ namespace hwloc {
                         _empty = false; //pushing so not empty anymore
                     }
                     _queue[_tail] = toPush;
-                    _tail++;
+		    if (_tail + 1 > _meta._size - 1) { // wrap around on tail
+			_tail = 0;
+		    }
+		    else { 
+		        _tail++; 
+		    }
+		    if ((_tail == _head - 1) || ((_tail == (_meta._size - 1)) && (_head == 0))) {
+			    // if new _tail 1 behind _head, its full (has to leave empty slot)
+			    // also if _tail is last element and _head is 0 (wraparound)
+			    _full = true;
+
+		    }
+                    
+		    /*
                     if (_tail == _head) {
                         _full = true; //if head and tail equal and not empty, must be full
                     }
+		    */
                 }
                 else {
                     _lock.unlock();
@@ -203,6 +214,9 @@ namespace hwloc {
                     }
                     *toPop = _queue[_head]; //copy to arg
                     _head++;
+		    if (_head == _meta._size) { //wraparound
+		        _head = 0;
+		    }
                     if (_head == _tail) {
                         _empty = true;
                     }
@@ -239,11 +253,26 @@ namespace hwloc {
                 _full = false;
                 _head = 0;
                 _tail = 0;
+		_lock.unlock();
                 return(0);
             }
 
     };
-}
-}
+
+
+    /*
+    template <typename T>
+    class MsgQFifo: protected Fifo {
+        protected:
+	    std::vector<std::queue<T>> Qdata;
+	    std::mutex * lock;
+	    void qInitLock(int n);
+	    void qDestroyLock(void);
+	    void qAlloc(int n);
+	    void qFree(void);
+    };
+    */
+//}
+} //namespace darts
 
 #endif

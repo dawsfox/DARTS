@@ -36,7 +36,7 @@ namespace darts
 
     //This is a forward declaration since there is a circular dependence
     class ThreadedProcedure;    
-    //this is also a forward declaration
+    //This is also a forward declaration
     class Fifo;
     /*
 		 * Class: Codelet
@@ -79,10 +79,6 @@ namespace darts
 				 *	res - The value of the dependence counter if the codelet has to be reset
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
-				 *	producerFlag - Flag indicating Codelet will receive streamed input from FIFO
-				 *	consumerFlag - Flag indicating Codelet will stream output to FIFO
-				 *	producerId - Id to match streamed input from specific source Codelet
-				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
         Codelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT);
         Codelet(void);
@@ -100,10 +96,6 @@ namespace darts
 				 *	res - The value of the dependence counter if the codelet has to be reset
 				 *	theTp - The TP the codelet belongs to
 				 *	stat - Locality parameter (TODO: has to be explicited)
-				 *	producerFlag - Flag indicating Codelet will receive streamed input from FIFO
-				 *	consumerFlag - Flag indicating Codelet will stream output to FIFO
-				 *	producerId - Id to match streamed input from specific source Codelet
-				 *	consumerId - Id to match streamed output to specific dest. Codelet
          */
         void initCodelet(uint32_t dep, uint32_t res, ThreadedProcedure * theTp, uint32_t stat);
 
@@ -186,31 +178,16 @@ namespace darts
 				 * This is the code of the codelet to be executed.
          */
         virtual void fire(void) = 0;
+
+	virtual Fifo * getConsumer() { return(nullptr); }
+	virtual Codelet * getConsumerCod() { return(nullptr); }
+	virtual void setConsumer(Fifo *consumer) { return; }
+	virtual void decDepConsumerCod() { return; }
+        virtual Fifo * generateFifo(const uint64_t cluster, const uint64_t localMem, const uint64_t id, const uint64_t size, Codelet *consumer) { return(nullptr); }
                  
         #ifdef TRACE
         void * returnFunct(void);
         #endif
     };    
 
-    class StreamingCodelet : public Codelet {
-    protected:
-        Fifo *producer_; //assigned by TP scheduler when dependencies fulfilled
-        Fifo *consumer_; //same here. These can both be active
-	Codelet * consumerCod_; //pipelining chain goes downwards so only contains consumer Codelet pointer
-	//think of it like a linked list of streaming codelets managed by the SU
-	virtual bool isStreaming() { return true; }
-    public:
-        StreamingCodelet();
-        StreamingCodelet(Codelet *consumerCod);
-        StreamingCodelet(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * theTp=NULL, uint32_t stat=SHORTWAIT);
-	//darts::hwloc::Fifo * getProducer();
-	//darts::hwloc::Fifo * getConsumer();
-	Fifo * getConsumer();
-	Fifo * getProducer();
-	void setProducer(Fifo *producer);
-	void setConsumer(Fifo *consumer);
-	void setConsumerCod(Codelet *consumerCod);
-	void decDepConsumerCod();
-	
-    };
 } // namespace darts

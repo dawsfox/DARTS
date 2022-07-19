@@ -158,23 +158,4 @@ namespace darts
     }
     #endif
 
-    StreamingCodelet::StreamingCodelet() :
-	    Codelet() { };
-
-    StreamingCodelet::StreamingCodelet(Codelet *consumerCod) :
-	    Codelet(),
-	    consumerCod_(consumerCod)
-	    { };
-
-    StreamingCodelet::StreamingCodelet(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * theTp, uint32_t stat) :
-	    Codelet(dep, res, theTp, stat),
-	    consumerCod_(consumerCod)
-	    { };
-    
-    Fifo * StreamingCodelet::getConsumer() { return(consumer_); }
-    Fifo * StreamingCodelet::getProducer() { return(producer_); }
-    void StreamingCodelet::setProducer(Fifo * producer) { producer_ = producer; }
-    void StreamingCodelet::setConsumer(Fifo * consumer) { consumer_ = consumer; }
-    void StreamingCodelet::setConsumerCod(Codelet * consumerCod) { consumerCod_ = consumerCod; }
-    void StreamingCodelet::decDepConsumerCod() { consumerCod_->decDep(); }
 } // namespace darts

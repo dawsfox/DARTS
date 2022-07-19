@@ -58,8 +58,7 @@ namespace darts
     protected:
         dartsPool<tpClosure*> ready_;
         dartsPool<Codelet*> codelets_;
-	//TODO: Change from FifoMeta to whole Fifo?
-	std::vector<darts::hwloc::FifoMeta*> fifoTable;
+	dartsPool<Fifo*> fifos_;
 
     public:
         
@@ -161,8 +160,8 @@ namespace darts
         
         static TPScheduler * create(unsigned int type);
 
-	virtual Fifo *
-	allocateFifo(Codelet * producerCod) = 0;
+	//virtual Fifo *
+	//allocateFifo(Codelet * producerCod) = 0;
     };
 }
 
