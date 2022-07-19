@@ -70,7 +70,6 @@ namespace darts
             whichSub_ = index;
         }
 
-	//virtual Fifo *
 	Fifo *
 	allocateFifo(Codelet * producerCod);
     };

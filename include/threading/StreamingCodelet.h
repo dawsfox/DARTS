@@ -32,7 +32,7 @@ namespace darts
 	void setConsumerCod(Codelet *consumerCod) { this->consumerCod_ = consumerCod; }
 	virtual void decDepConsumerCod() { (this->consumerCod_)->decDep(); }
         virtual Fifo * generateFifo(const uint64_t cluster, const uint64_t localMem, const uint64_t id, const uint64_t size, Codelet *consumer) {
-		Fifo * streamFifo = new SoftFifo<outputData>(0, 0, 0, 10, this, this->getConsumerCod()); 
+		Fifo * streamFifo = new MsgQFifo<outputData>(0, 0, 0, 10, this, this->getConsumerCod()); 
 	    return(streamFifo);
 	}
 	/* The generateFifo method is only attached here as a way to resolve
@@ -42,7 +42,6 @@ namespace darts
 	 * This method SHOULD NOT be called by a user; it exists only to be
 	 * called by the scheduling mechanism.
 	 */
-	//copied from .cpp
 
     };
 } //namespace darts

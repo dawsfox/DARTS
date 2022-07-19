@@ -5,6 +5,7 @@
 #include <vector>
 #include "Lock.h"
 #include "Codelet.h"
+#include "MsgQ.hpp"
 
 namespace darts {
 //namespace hwloc {
@@ -60,7 +61,7 @@ namespace darts {
 	
 
     /**
-     * \brief FIFO abstraction for streaming and token passing
+     * \brief FIFO abstraction for streaming and token passing. Template for polymorphism
      */
     class Fifo {
     protected: //was private -- should this still be private?
@@ -82,14 +83,6 @@ namespace darts {
 	     uint64_t typeSize,
              Codelet *producer,
              Codelet *consumer) 
-		/*
-        : _cluster(cluster),
-          _localMem(localMem),
-          _id(id),
-          _size(size),
-          _producer(producer),
-          _consumer(consumer)
-	        */
         {
 	    _meta = FifoMeta(cluster, localMem, id, size, typeSize, producer, consumer);
 	}
@@ -109,9 +102,14 @@ namespace darts {
         Codelet * getProducer()   const { return _meta.getProducer(); }
         Codelet * getConsumer()   const { return _meta.getConsumer(); } //will have to be extended if multiple consumers allowed
 
-        //template <typename T> uint64_t push(T toPush) {
-        //}
-        // init is part of constructor
+	/* Fifo class can't be a template because Codelets can't return them
+	 * without specifying type. Because Fifo can't be a template, these functions
+	 * can't be vulnerable. It is bad practice but all subclasses will have to have
+	 * the same pop, push, and peek functions for consistency, like a standard.
+        virtual uint64_t push(T toPush) = 0;
+	virtual uint64_t pop(T *toPop) = 0;
+	virtual uint64_t peek(T *toPeek) = 0;
+	*/
 
         
     };
@@ -154,24 +152,8 @@ namespace darts {
                 delete[] _queue;
             }
             
-	    /*
-            template <typename T> int initQueue() {
-                _queue2 = (std::vector<T> *) new std::vector<T> (_size);
-                return(0);
-            }
-	    int initQueue() {
-		_queue2 = (std::vector<T> *) new std::vector<T> (_size);
-		return(0);
-	    }
-
-            int destroyQueue() {
-                delete[] _queue2;
-                return(0);
-            }
-	    */
-
             //template <typename T> int push(T toPush) {
-	    int push(T toPush) {
+	    uint64_t push(T toPush) {
                 _lock.lock();
                 if (!_full) {
                     if (_empty) {
@@ -205,8 +187,7 @@ namespace darts {
                 return(0);
             }
 
-            //template <typename T> int pop(T *toPop) {
-	    int pop(T *toPop) {
+	    uint64_t pop(T *toPop) {
                 _lock.lock();
                 if (!_empty) {
                     if (_full) {
@@ -233,7 +214,7 @@ namespace darts {
             // can remove locks because not writing anything?
             // gets head of queue but does not remove it / change flags
             //template <typename T> int peek(T *toPeek) {
-	    int peek(T *toPeek) {
+	    uint64_t peek(T *toPeek) {
                 _lock.lock();
                 if (!_empty) {
                     *toPeek = _queue[_head]; //copy to arg
@@ -247,7 +228,7 @@ namespace darts {
                 return(0);
             }
 
-            int clear() {
+            uint64_t clear() {
                 _lock.lock();
                 _empty = true;
                 _full = false;
@@ -260,18 +241,50 @@ namespace darts {
     };
 
 
-    /*
     template <typename T>
     class MsgQFifo: protected Fifo {
-        protected:
-	    std::vector<std::queue<T>> Qdata;
-	    std::mutex * lock;
-	    void qInitLock(int n);
-	    void qDestroyLock(void);
-	    void qAlloc(int n);
-	    void qFree(void);
+        private:
+            MessageQueue<T> * _msgQ;
+        public:
+            MsgQFifo()
+            {
+	        _msgQ = new MessageQueue<T>;
+            }
+	    // size is unused currently
+            MsgQFifo(const uint64_t cluster,
+             const uint64_t localMem,
+             const uint64_t id,
+             const uint64_t size,
+             Codelet *producer,
+             Codelet *consumer)
+            : Fifo(cluster, localMem, id, size, sizeof(T), producer, consumer)
+             {
+		_msgQ = new MessageQueue<T>;
+	     }
+            
+            ~MsgQFifo() {
+                delete _msgQ;
+            }
+            
+	    uint64_t push(T toPush) {
+                _msgQ->qPut(0, toPush);
+                return(0);
+            }
+
+	    uint64_t pop(T *toPop) {
+                return(_msgQ->qGet(0, toPop));
+            }
+        
+	    uint64_t peek(T *toPeek) {
+                return(_msgQ->qPoll(0, toPeek));
+            }
+
+            uint64_t clear() {
+                return(0);
+            }
+
     };
-    */
+
 //}
 } //namespace darts
 
