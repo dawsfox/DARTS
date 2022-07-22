@@ -46,6 +46,7 @@ public:
 
     virtual void fire(void)
     {
+        //std::cout << "aCD firing" << std::endl;
         toSignal->decDep();
     }
 };
@@ -58,6 +59,7 @@ public:
     ThreadedProcedure(),
     acd(0,0,this,0,toSig)
     {  
+        //std::cout << "aTP constructing" << std::endl;
         add(&acd);
     }
 };
@@ -75,11 +77,12 @@ int main(int argc, char *argv[])
     uint64_t innerTime = 0;
     uint64_t outerTime = 0;
     
+    //TPROUNDROBIN appears to not be functional
     ThreadAffinity affin(cds, tps, SPREAD, TPDYNAMIC, MCDYNAMIC);
     if (affin.generateMask())
     {
         Runtime * rt = new Runtime(&affin);
-
+        //std::cout << "runtime created" << std::endl;
         for (int i = 0; i < OUTER; i++) 
         {
             rt->run(launch<aTP>(&Runtime::finalSignal));

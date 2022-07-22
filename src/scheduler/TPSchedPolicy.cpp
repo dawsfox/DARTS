@@ -44,27 +44,21 @@ namespace darts {
     // (producerCod) is a StreamingCodelet
     Fifo *
     TPRoundRobin::allocateFifo(Codelet * producerCod) {
-	// decDep consumer here?
         // TODO
 	// Make scheduling decision here -- not now but in the future
 	// for example, decDep consumer and see if it is ready; if its not yet
 	// then store farther away. If it is, use HW Fifo when available 
-	producerCod->decDepConsumerCod();
-	//producerCod->decDepCons();
-	// new Fifo
-	// to be safe, we may also want to check if the consumerCod is NULL but this should really be checked
-	// before this function is even called to make sure it's not the end of a streaming pipeline
+	// new Fifo, set producer/consumer values on Fifo
 	Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
-	// set producer/consumer values on Fifo
+	//consumer should have only 1 dep; all others are intrinsic through producer Codelet
+	producerCod->decDepConsumerCod();
 	producerCod->setConsumer(streamFifo);
+	(producerCod->getConsumerCod())->setProducer(streamFifo);
 	// here we're not setting producer because this Codelet does not have a Fifo
 	// producing for it -- or if it does then it is already assigned 
 	// add Fifo to SU-managed table
-	//fifoTable.push_back(streamFifo);
 	fifos_.push(streamFifo);
 	// set Fifo address on StreamingCodelet(s)
-	
-
 	return(streamFifo);
     }
 
@@ -100,6 +94,12 @@ namespace darts {
             //Lets do the work!
             Codelet * tempCodelet = popCodelet();
 	    //check if Codelet expects streamed input/output
+	    //if it is Streaming but doesn't have a consumer Codelet, it is the end of a pipeline
+	    if (tempCodelet) { //check in case pop returns nullptr
+	        if (tempCodelet->isStreaming() && (tempCodelet->getConsumerCod() != nullptr)) {
+                    this->allocateFifo(tempCodelet);
+                }
+	    }
 	    //allocate Fifo (later can possibly reuse allocated Fifos depending on settings?)
 	    //update Fifo book keeping
 	    //set Codelet's pointer(s)
@@ -252,6 +252,31 @@ namespace darts {
         return myCDS->pushCodelet(CodeletToPush);
     }
 
+    Fifo *
+    TPDynamic::allocateFifo(Codelet * producerCod) {
+        //std::cout << "TPScheduler allocating Fifo" << std::endl;
+        // TODO
+	// Make scheduling decision here -- not now but in the future
+	// for example, decDep consumer and see if it is ready; if its not yet
+	// then store farther away. If it is, use HW Fifo when available 
+	// new Fifo, set producer/consumer values on Fifo
+	Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
+	producerCod->setConsumer(streamFifo);
+	(producerCod->getConsumerCod())->setProducer(streamFifo);
+	// here we're not setting producer because this Codelet does not have a Fifo
+	// producing for it -- or if it does then it is already assigned 
+	// add Fifo to SU-managed table
+	fifos_.push(streamFifo);
+	//consumer should have only 1 dep; all others are intrinsic through producer Codelet
+	producerCod->decDepConsumerCod();
+	//std::cout << "consumer fifo points to " << producerCod->getConsumer() << std::endl;
+	//std::cout << "producer fifo points to " << (producerCod->getConsumerCod())->getProducer() << std::endl; 
+	//std::cout << "Fifo allocated" << std::endl;
+	// set Fifo address on StreamingCodelet(s)
+	return(streamFifo);
+    }
+
+
     void
     TPDynamic::policy() {
         useconds_t usecs = 1, 
@@ -284,6 +309,12 @@ namespace darts {
 
             //Lets do the work!
             Codelet * tempCodelet = popCodelet();
+	    if (tempCodelet) { //make sure not nullptr before accessing methods
+                if (tempCodelet->isStreaming() && (tempCodelet->getConsumerCod() != nullptr)) {
+                    //std::cout << "inside TPScheduler streaming-if statement" << std::endl;
+                    this->allocateFifo(tempCodelet);
+                }
+            }
             while (tempCodelet) {
                 ThreadedProcedure * checkTP = tempCodelet->getTP();
                 bool deleteTP = (checkTP) ? checkTP->checkParent() : false;
@@ -306,8 +337,19 @@ namespace darts {
                 }
 
                 tempCodelet = popCodelet();
-            }
-        }
+		// should this be here? Does it also need to be above outside while loop?
+		// the real problem is how to free the Fifos
+		// TODO: add mechanism for bookkeeping (deleting Fifos that are out of use)
+		if (tempCodelet) { //make sure not nullptr before accessing methods
+	            if (tempCodelet->isStreaming() && (tempCodelet->getConsumerCod() != nullptr)) {
+		        //std::cout << "inside TPScheduler streaming-if statement" << std::endl;
+                        this->allocateFifo(tempCodelet);
+                    }
+		}
+            } //while tempCodelet
+        } //while alive
+	//std::cout << "clearing Fifos" << std::endl;
+	this->clearFifos();
     }
 
     void

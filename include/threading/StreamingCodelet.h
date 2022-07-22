@@ -35,6 +35,16 @@ namespace darts
 		Fifo * streamFifo = new MsgQFifo<outputData>(0, 0, 0, 10, this, this->getConsumerCod()); 
 	    return(streamFifo);
 	}
+	// this StreamingCodelet is done pushing to consumer Fifo
+	void disassocConsFifo() {
+            //disassociates this Codelet from the consumer Fifo by setting Fifo's producer to nullptr
+	    getConsumer()->disassocProd();
+	}
+	// this StreamingCodelet is done popping from producer Fifo
+	void disassocProdFifo() {
+            //disassociates this Codelet from the producer Fifo by setting Fifo's consumer to nullptr
+	    getProducer()->disassocCons();
+	}
 	/* The generateFifo method is only attached here as a way to resolve
 	 * the typing issue with template subclass(es) of Fifo and so the SU
 	 * (i.e. TPScheduler and TPSchedPolicy don't have to be aware of the

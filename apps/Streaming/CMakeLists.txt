@@ -29,15 +29,8 @@
 #                                                                              #
 ################################################################################
 
-add_subdirectory (Fib)
-add_subdirectory (Runtime)
-add_subdirectory (TP)
-add_subdirectory (CD)
-add_subdirectory (Streaming)
-add_subdirectory (Fanout)
-add_subdirectory (Chain)
-add_subdirectory (Tree)
-add_subdirectory (MatrixMultiply)
-add_subdirectory (Mergesort)
-add_subdirectory (FFT)
-add_subdirectory (FastMergesort)
+add_executable(cd_nos cd.cpp)
+target_link_libraries(cd_nos darts)
+
+add_executable(cd1_s cd1.cpp)
+target_link_libraries(cd1_s darts)

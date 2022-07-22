@@ -180,8 +180,10 @@ namespace darts
         virtual void fire(void) = 0;
 
 	virtual Fifo * getConsumer() { return(nullptr); }
+	virtual Fifo * getProducer() { return(nullptr); }
 	virtual Codelet * getConsumerCod() { return(nullptr); }
 	virtual void setConsumer(Fifo *consumer) { return; }
+	virtual void setProducer(Fifo *producer) { return; }
 	virtual void decDepConsumerCod() { return; }
         virtual Fifo * generateFifo(const uint64_t cluster, const uint64_t localMem, const uint64_t id, const uint64_t size, Codelet *consumer) { return(nullptr); }
                  

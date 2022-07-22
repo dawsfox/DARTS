@@ -65,6 +65,7 @@ namespace darts
     void
     Codelet::decDep(void)
     {
+        //std::cout << "dep being dec'd" << std::endl;
         if(sync_.decCounter())
         {
             if(myTP_)

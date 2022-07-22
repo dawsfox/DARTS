@@ -55,8 +55,10 @@ namespace darts {
 	uint64_t getId() const { return _id; }
 	uint64_t getSize() const { return _size; }
 	uint64_t getTypeSize() const { return _typeSize; }
-	Codelet * getProducer() const { return _producer; }
-	Codelet * getConsumer() const { return _consumer; }
+	Codelet * getProducer() { return _producer; }
+	Codelet * getConsumer() { return _consumer; }
+	void disassocProd() { _producer = nullptr; }
+	void disassocCons() { _consumer = nullptr; }
     };
 	
 
@@ -86,6 +88,7 @@ namespace darts {
         {
 	    _meta = FifoMeta(cluster, localMem, id, size, typeSize, producer, consumer);
 	}
+	virtual ~Fifo() { } //makes Fifo polymorphic for dynamic_cast
 
         /** \brief @return the cluster ID */
         uint64_t getCluster()  const { return _meta.getCluster();  }
@@ -99,12 +102,14 @@ namespace darts {
 	FifoMeta * getFifoMeta() const { return (FifoMeta *) &(_meta); }
         //uint64_t getNumConsumers() const { return _meta.; }
 	//num consumers can be added later
-        Codelet * getProducer()   const { return _meta.getProducer(); }
-        Codelet * getConsumer()   const { return _meta.getConsumer(); } //will have to be extended if multiple consumers allowed
+        Codelet * getProducer()   { return _meta.getProducer(); }
+        Codelet * getConsumer()   { return _meta.getConsumer(); } //will have to be extended if multiple consumers allowed
+	void disassocProd() { this->_meta.disassocProd(); }
+	void disassocCons() { this->_meta.disassocCons(); }
 
 	/* Fifo class can't be a template because Codelets can't return them
 	 * without specifying type. Because Fifo can't be a template, these functions
-	 * can't be vulnerable. It is bad practice but all subclasses will have to have
+	 * can't be virtual. It is bad practice but all subclasses will have to have
 	 * the same pop, push, and peek functions for consistency, like a standard.
         virtual uint64_t push(T toPush) = 0;
 	virtual uint64_t pop(T *toPop) = 0;
@@ -117,7 +122,7 @@ namespace darts {
     //should just replace this with MsgQ asap
     //also this queue could be lockless with an empty element
     template <typename T>
-    class SoftFifo: protected Fifo {
+    class SoftFifo: public Fifo {
         private:
             uint32_t _head,
                      _tail;
@@ -242,13 +247,13 @@ namespace darts {
 
 
     template <typename T>
-    class MsgQFifo: protected Fifo {
+    class MsgQFifo: public Fifo {
         private:
             MessageQueue<T> * _msgQ;
         public:
             MsgQFifo()
             {
-	        _msgQ = new MessageQueue<T>;
+	        _msgQ = new MessageQueue<T>(1);
             }
 	    // size is unused currently
             MsgQFifo(const uint64_t cluster,
@@ -259,19 +264,21 @@ namespace darts {
              Codelet *consumer)
             : Fifo(cluster, localMem, id, size, sizeof(T), producer, consumer)
              {
-		_msgQ = new MessageQueue<T>;
+		_msgQ = new MessageQueue<T>(1);
 	     }
             
-            ~MsgQFifo() {
+            virtual ~MsgQFifo() {
                 delete _msgQ;
             }
             
 	    uint64_t push(T toPush) {
+                //std::cout << "pushing to MsgQ" << std::endl;
                 _msgQ->qPut(0, toPush);
                 return(0);
             }
 
 	    uint64_t pop(T *toPop) {
+                //std::cout << "popping from MsgQ" << std::endl;
                 return(_msgQ->qGet(0, toPop));
             }
         
@@ -279,6 +286,7 @@ namespace darts {
                 return(_msgQ->qPoll(0, toPeek));
             }
 
+	    // no implementation currently
             uint64_t clear() {
                 return(0);
             }

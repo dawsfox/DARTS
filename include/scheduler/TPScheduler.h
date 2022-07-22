@@ -69,7 +69,8 @@ namespace darts
             
         }
         
-	~TPScheduler(void){}
+	// do I need to free Fifos here for now?
+	~TPScheduler(void){ }
 
         Scheduler *
         getSubScheduler(size_t pos) const
@@ -131,6 +132,17 @@ namespace darts
             }
             return NULL;
         }  
+
+	void
+	clearFifos(void)
+	{
+            while(!fifos_.empty()) {
+                Fifo * tmp = fifos_.pop();
+                if (tmp) {
+                    delete tmp;
+		}
+            }
+	}
         
         virtual void policy(void) = 0;
                 
