@@ -44,24 +44,29 @@ namespace darts {
     // (producerCod) is a StreamingCodelet
     Fifo *
     TPRoundRobin::allocateFifo(Codelet * producerCod) {
+        //std::cout << "TPScheduler allocating Fifo" << std::endl;
         // TODO
-	// Make scheduling decision here -- not now but in the future
-	// for example, decDep consumer and see if it is ready; if its not yet
-	// then store farther away. If it is, use HW Fifo when available 
-	// new Fifo, set producer/consumer values on Fifo
-	Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
-	//consumer should have only 1 dep; all others are intrinsic through producer Codelet
-	producerCod->decDepConsumerCod();
-	producerCod->setConsumer(streamFifo);
-	(producerCod->getConsumerCod())->setProducer(streamFifo);
-	// here we're not setting producer because this Codelet does not have a Fifo
-	// producing for it -- or if it does then it is already assigned 
-	// add Fifo to SU-managed table
-	fifos_.push(streamFifo);
-	// set Fifo address on StreamingCodelet(s)
-	return(streamFifo);
+	    // Make scheduling decision here -- not now but in the future
+	    // for example, decDep consumer and see if it is ready; if its not yet
+	    // then store farther away. If it is, use HW Fifo when available 
+	    // new Fifo, set producer/consumer values on Fifo
+	    Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
+	    producerCod->setConsumer(streamFifo);
+	    (producerCod->getConsumerCod())->setProducer(streamFifo);
+	    // here we're not setting producer because this Codelet does not have a Fifo
+	    // producing for it -- or if it does then it is already assigned 
+	    // add Fifo to SU-managed table
+	    fifos_.push(streamFifo);
+	    //consumer should have only 1 dep; all others are intrinsic through producer Codelet
+	    producerCod->decDepConsumerCod();
+	    //std::cout << "consumer fifo points to " << producerCod->getConsumer() << std::endl;
+	    //std::cout << "producer fifo points to " << (producerCod->getConsumerCod())->getProducer() << std::endl; 
+	    //std::cout << "Fifo allocated" << std::endl;
+	    // set Fifo address on StreamingCodelet(s)
+	    return(streamFifo);
     }
 
+    // Creates TPs from TPClosures; pops Codelets from queue and distributes them evenly to MCSchedulers
     void
     TPRoundRobin::policy() {
         useconds_t usecs = 1,
@@ -107,14 +112,17 @@ namespace darts {
 	    //could go with unique Fifo IDs
             while (tempCodelet) {
                 MScheduler * myCDS = static_cast<MScheduler*> (getSubScheduler(getSubIndexInc()));
+                //std::cout << "TPScheduler trying to push codelet . . ." << std::endl;
                 while (!myCDS->pushCodelet(tempCodelet)) {
                     myCDS = static_cast<MScheduler*> (getSubScheduler(getSubIndexInc()));
                 }
+                //std::cout << "Codelet successfully pushed" << std::endl;
                 tempCodelet = popCodelet();
             }
         }
     }
 
+    // Creates TPs; pops codelets and attempts to push them to MCSchedulers; if it fails, executes Codelet itself
     void
     TPPushFull::policy() {
         useconds_t usecs = 1, 
@@ -183,6 +191,7 @@ namespace darts {
         }
     }
 
+    // Creates TPs; pops Codelets and fires them; DOES NOT distribute codelets to MCSchedulers
     void
     TPStatic::policy() {
         useconds_t usecs = 1, 
@@ -239,6 +248,8 @@ namespace darts {
         }
     }
 
+    // This is probably defined so MCSchedulers can push Codelets to TPScheduler
+    // since TPStatic, aside from creating TPs, only pops codelets and fires them
     bool
     TPStatic::pushCodelet(Codelet * CodeletToPush) 
     {
@@ -252,31 +263,35 @@ namespace darts {
         return myCDS->pushCodelet(CodeletToPush);
     }
 
+    /* TODO: make this work with other MCSchedPolicies. DO NOT use this or StreamingCodelets with the
+             MCDYNAMIC policy; MCDYNAMIC policy pops codelets from TPScheduler and creates a race condition
+             where StreamingCodelets may try to access Fifo without one being allocated
+    */
     Fifo *
     TPDynamic::allocateFifo(Codelet * producerCod) {
         //std::cout << "TPScheduler allocating Fifo" << std::endl;
         // TODO
-	// Make scheduling decision here -- not now but in the future
-	// for example, decDep consumer and see if it is ready; if its not yet
-	// then store farther away. If it is, use HW Fifo when available 
-	// new Fifo, set producer/consumer values on Fifo
-	Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
-	producerCod->setConsumer(streamFifo);
-	(producerCod->getConsumerCod())->setProducer(streamFifo);
-	// here we're not setting producer because this Codelet does not have a Fifo
-	// producing for it -- or if it does then it is already assigned 
-	// add Fifo to SU-managed table
-	fifos_.push(streamFifo);
-	//consumer should have only 1 dep; all others are intrinsic through producer Codelet
-	producerCod->decDepConsumerCod();
-	//std::cout << "consumer fifo points to " << producerCod->getConsumer() << std::endl;
-	//std::cout << "producer fifo points to " << (producerCod->getConsumerCod())->getProducer() << std::endl; 
-	//std::cout << "Fifo allocated" << std::endl;
-	// set Fifo address on StreamingCodelet(s)
-	return(streamFifo);
+	    // Make scheduling decision here -- not now but in the future
+	    // for example, decDep consumer and see if it is ready; if its not yet
+	    // then store farther away. If it is, use HW Fifo when available 
+	    // new Fifo, set producer/consumer values on Fifo
+	    Fifo * streamFifo = producerCod->generateFifo(0, 0, 0, 10, producerCod->getConsumerCod());
+	    producerCod->setConsumer(streamFifo);
+	    (producerCod->getConsumerCod())->setProducer(streamFifo);
+	    // here we're not setting producer because this Codelet does not have a Fifo
+	    // producing for it -- or if it does then it is already assigned 
+	    // add Fifo to SU-managed table
+	    fifos_.push(streamFifo);
+	    //consumer should have only 1 dep; all others are intrinsic through producer Codelet
+	    producerCod->decDepConsumerCod();
+	    //std::cout << "consumer fifo points to " << producerCod->getConsumer() << std::endl;
+	    //std::cout << "producer fifo points to " << (producerCod->getConsumerCod())->getProducer() << std::endl; 
+	    //std::cout << "Fifo allocated" << std::endl;
+	    // set Fifo address on StreamingCodelet(s)
+	    return(streamFifo);
     }
 
-
+    // Creates TPs, pops codelets from own queue and fires them; DOES NOT distribute codelets
     void
     TPDynamic::policy() {
         useconds_t usecs = 1, 
@@ -337,8 +352,6 @@ namespace darts {
                 }
 
                 tempCodelet = popCodelet();
-		// should this be here? Does it also need to be above outside while loop?
-		// the real problem is how to free the Fifos
 		// TODO: add mechanism for bookkeeping (deleting Fifos that are out of use)
 		if (tempCodelet) { //make sure not nullptr before accessing methods
 	            if (tempCodelet->isStreaming() && (tempCodelet->getConsumerCod() != nullptr)) {
@@ -352,6 +365,7 @@ namespace darts {
 	this->clearFifos();
     }
 
+    // Makes TPs; Distributes Codelets; DOES NOT fire codelets ever
     void
     TPWorkPush::policy() {
         useconds_t usecs = 1,
@@ -399,10 +413,10 @@ namespace darts {
     TPScheduler *
     TPScheduler::create(unsigned int type) 
     {
-        if (type == TPROUNDROBIN) return new TPRoundRobin;
-        if (type == TPPUSHFULL) return new TPPushFull;
-        if (type == TPSTATIC) return new TPStatic;
-        if (type == TPDYNAMIC) return new TPDynamic;        
+        if (type == TPROUNDROBIN) return new TPRoundRobin; // Creates TPs from TPClosures; pops Codelets from queue and distributes them evenly to MCSchedulers
+        if (type == TPPUSHFULL) return new TPPushFull;     // Creates TPs; pops codelets and attempts to push them to MCSchedulers; if it fails, executes Codelet itself
+        if (type == TPSTATIC) return new TPStatic;         // Creates TPs; pops Codelets and fires them; DOES NOT distribute codelets to MCSchedulers
+        if (type == TPDYNAMIC) return new TPDynamic;       // Creates TPs, pops codelets from own queue and fires them; DOES NOT distribute codelets
         else return NULL;
     }
 

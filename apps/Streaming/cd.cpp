@@ -36,7 +36,7 @@
 //#define OUTER 1000
 #define INNER 15
 #define OUTER 15
-#define ARRAY_LENGTH 1000000
+#define ARRAY_LENGTH 10000
 
 using namespace darts;
 
@@ -92,28 +92,6 @@ public:
     virtual void fire(void);
 }; //copyCD
 
-/*
-class loadSCD : public StreamingCodelet<int, int>
-{
-public:
-    loadSCD(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * myTP, uint32_t stat):
-    StreamingCodelet(dep, res, consumerCod, myTP, stat) { }
-
-    virtual void fire(void);
-}; //loadSCD (streaming)
-
-class copySCD : public StreamingCodelet<int, int>
-{
-public:
-    Codelet * toSignal;
-    copySCD(uint32_t dep, uint32_t res, Codelet *consumerCod, ThreadedProcedure * myTP, uint32_t stat, Codelet * toSig):
-    StreamingCodelet(dep, res, consumerCod, myTP, stat),
-    toSignal(toSig) { }
-
-    virtual void fire(void);
-}; //copySCD (streaming)
-*/
-
 class aTP : public ThreadedProcedure
 {
 public:
@@ -143,34 +121,6 @@ public:
 	add(&endcd);
     }
 };
-
-/*
-void loadSCD::fire(void)
-{
-    //std::cout << "loadSCD firing" << std::endl;
-    //std::cout << "getConsumer produces: " << this->getConsumer() << std::endl;
-    MsgQFifo<int> * localFifo = dynamic_cast<MsgQFifo<int> *>(this->getConsumer());
-    //std::cout << "localFifo is " << localFifo << std::endl;
-    int * arr = (dynamic_cast<aTP *>(myTP_))->x;
-    for (int i=0; i<ARRAY_LENGTH; i++) {
-        arr[i] = i;
-        localFifo->push(arr[i]);
-    }
-    //std::cout << "loadSCD done firing" << std::endl;
-}
-
-void copySCD::fire(void) 
-{
-    //std::cout << "copySCD firing" << std::endl;
-    MsgQFifo<int> * localFifo = dynamic_cast<MsgQFifo<int> *>(this->getProducer());
-    int * arr2 = (dynamic_cast<aTP *>(myTP_))->y;
-    for (int i=0; i<ARRAY_LENGTH; i++) {
-        localFifo->pop(&(arr2[i]));
-    }
-    toSignal->decDep();
-    //std::cout << "copySCD done firing" << std::endl;
-}
-*/
 
 void loadCD::fire(void) {
     int * arr = (dynamic_cast<aTP *>(myTP_))->x;
@@ -204,7 +154,7 @@ int main(int argc, char *argv[])
     uint64_t innerTime = 0;
     uint64_t outerTime = 0;
     
-    ThreadAffinity affin(cds, tps, SPREAD, TPDYNAMIC, MCSTATIC);
+    ThreadAffinity affin(cds, tps, SPREAD, TPROUNDROBIN, MCSTANDARD);
     if (affin.generateMask())
     {
         Runtime * rt = new Runtime(&affin);

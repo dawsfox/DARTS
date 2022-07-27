@@ -58,7 +58,7 @@ namespace darts
                 return true;
             }
 
-            T pull(void)
+            T pull()
             {
                 if(produceCount - consumeCount == 0)
                     return 0;
@@ -68,7 +68,63 @@ namespace darts
                 return temp;
             }
     };
-}
+
+    template <typename T>
+    class ringBuffRef
+    {
+        private:
+            unsigned int produceCount;
+            char pad1[64-sizeof(int)];
+            unsigned int consumeCount;
+            char pad2[64-sizeof(int)];
+            T * buffer_;
+            size_t num_;
+        public:
+            ringBuffRef():
+            produceCount(0),
+            consumeCount(0) { }
+
+            ringBuffRef(size_t num):
+            produceCount(0),
+            consumeCount(0),
+            num_(num)
+            {
+                buffer_ = (T *) malloc(sizeof(T) * num_);
+            }
+
+            // implies ringBufferRef MUST initialize buffer immediately after being created or free error
+            ~ringBuffRef()
+            {
+                free(buffer_);
+            }
+
+            void initBuff(size_t num)
+            {
+                num_ = num;
+                buffer_ = (T *) malloc(sizeof(T) * num_);
+            }
+
+            bool push(T toAdd )
+            {
+                if(produceCount - consumeCount == num_)
+                    return false;
+                buffer_[produceCount & (num_ -1)] = toAdd;
+                //produceCount++;
+                Atomics::fetchAdd(produceCount, 1U);
+                return true;
+            }
+
+            bool pull(T * toPull)
+            {
+                if(produceCount - consumeCount == 0)
+                    return false;
+                *toPull = buffer_[consumeCount & (num_ -1)];
+                //consumeCount++;
+                Atomics::fetchAdd(consumeCount, 1U);
+                return true;
+            }
+    };
+} //namespace darts
 
 #endif	/* RINGBUFFER_H */
 

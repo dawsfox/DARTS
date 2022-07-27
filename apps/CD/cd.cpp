@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     uint64_t innerTime = 0;
     uint64_t outerTime = 0;
     
+    //ThreadAffinity affin(cds, tps, SPREAD, TPROUNDROBIN, MCSTANDARD);
     ThreadAffinity affin(cds, tps, SPREAD, TPDYNAMIC, MCDYNAMIC);
     if (affin.generateMask())
     {

@@ -38,7 +38,7 @@
 #endif
 namespace darts
 {
-
+    // Pops codelet from MCScheduler's own queue and fires them
     void
     MicroStandard::policy(void)
     {
@@ -90,6 +90,7 @@ namespace darts
         }
     }
     
+    // same as microstandard? Pops codelets from own queue and fires them
     void
     MicroStatic::policy(void)
     {
@@ -139,6 +140,7 @@ namespace darts
         }
     }
     
+    // Only pops Codelet's from parent (TP) scheduler's codelet queue, fires them
     void
     MicroDynamic::policy()
     {
@@ -192,6 +194,7 @@ namespace darts
         }
     }
     
+    // Pops codelets from its own queue; if none exist, steals codelet from elsewhere; fires codelets
     void
     MicroSteal::policy()
     {
@@ -240,10 +243,10 @@ namespace darts
     MScheduler *
     MScheduler::create(unsigned int type)
     {
-        if (type==MCSTANDARD) return new MicroStandard;
-        if (type==MCSTATIC) return new MicroStatic;
-        if (type==MCDYNAMIC) return new MicroDynamic;
-        if (type==MCSTEAL) return new MicroSteal;
+        if (type==MCSTANDARD) return new MicroStandard;  // Pops codelet from MCScheduler's own queue and fires them
+        if (type==MCSTATIC) return new MicroStatic;      // same as microstandard? Pops codelets from own queue and fires them
+        if (type==MCDYNAMIC) return new MicroDynamic;    // Only pops Codelet's from parent (TP) scheduler's codelet queue, fires them
+        if (type==MCSTEAL) return new MicroSteal;        // Pops codelets from its own queue; if none exist, steals codelet from elsewhere; fires codelets
         else return NULL;
     }
     
